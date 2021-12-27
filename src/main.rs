@@ -4,6 +4,8 @@ use serde::Deserialize;
 use std::{sync::Arc, thread};
 use tokio::sync::{mpsc, oneshot};
 
+const CHANNEL_INDEX: usize = 1;
+
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     let (boot_tx, boot_rx) = oneshot::channel();
@@ -19,7 +21,7 @@ async fn main() -> Result<(), anyhow::Error> {
         let maybe_controller = ControllerBuilder::new()
             .freq(800_000)
             .dma(10)
-            .channel(1, channel)
+            .channel(CHANNEL_INDEX, channel)
             .build();
         let mut controller = match maybe_controller {
             Ok(c) => c,
@@ -31,8 +33,8 @@ async fn main() -> Result<(), anyhow::Error> {
         boot_tx.send(Ok(())).unwrap();
 
         while let Some(data) = data_rx.blocking_recv() {
-            println!("got pixels: {:?}", data);
-            let pixels = controller.leds_mut(0);
+            println!("instruction: {:?}", data);
+            let pixels = controller.leds_mut(CHANNEL_INDEX);
             let mut i = data.offset.unwrap_or(0);
             for (r, g, b) in data.pixels {
                 if i > pixels.len() {
