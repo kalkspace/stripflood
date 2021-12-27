@@ -82,5 +82,5 @@ async fn batch(
     Json(payload): Json<PixelBatch>,
     Extension(tx): Extension<Arc<mpsc::Sender<PixelBatch>>>,
 ) {
-    tx.send(payload).await.unwrap();
+    tx.try_send(payload).ok();
 }
