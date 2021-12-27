@@ -36,12 +36,17 @@ async fn main() -> Result<(), anyhow::Error> {
             println!("instruction: {:?}", data);
             let pixels = controller.leds_mut(CHANNEL_INDEX);
             let mut i = data.offset.unwrap_or(0);
-            for (r, g, b) in data.pixels {
-                if i > pixels.len() {
-                    println!("could not write all values. end of strand reached.");
+            for (p, (r, g, b)) in data.pixels.iter().cycle().enumerate() {
+                if p > data.pixels.len() && !data.r#loop {
                     break;
                 }
-                pixels[i] = [r, g, b, 0];
+                if i >= pixels.len() {
+                    if !data.r#loop {
+                        println!("could not write all values. end of strand reached.");
+                    }
+                    break;
+                }
+                pixels[i] = [*r, *g, *b, 0];
                 i += data.step.unwrap_or(1);
             }
             controller
@@ -69,6 +74,8 @@ struct PixelBatch {
     pixels: Vec<(u8, u8, u8)>,
     offset: Option<usize>,
     step: Option<usize>,
+    #[serde(default)]
+    r#loop: bool,
 }
 
 async fn batch(
