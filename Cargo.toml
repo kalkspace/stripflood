@@ -1,0 +1,12 @@
+[package]
+name = "stripflood"
+version = "0.1.0"
+authors = ["Marcus Weiner <marcus.weiner@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0.52"
+axum = "0.4.3"
+rs_ws281x = "0.4.2"
+serde = { version = "1.0.132", features = ["derive"] }
+tokio = { version = "1.15.0", features = ["rt-multi-thread", "macros", "net", "sync"] }
