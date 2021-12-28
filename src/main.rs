@@ -1,7 +1,7 @@
 use axum::{extract::Extension, routing::post, AddExtensionLayer, Json, Router};
 use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 use serde::Deserialize;
-use std::{sync::Arc, thread};
+use std::{net::Ipv6Addr, sync::Arc, thread};
 use tokio::sync::{mpsc, oneshot};
 
 const CHANNEL_INDEX: usize = 1;
@@ -62,7 +62,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/batch", post(batch))
         .layer(AddExtensionLayer::new(Arc::new(data_tx)));
 
-    axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
+    axum::Server::bind(&(Ipv6Addr::UNSPECIFIED, 3000).into())
         .serve(app.into_make_service())
         .await?;
 
