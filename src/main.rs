@@ -8,11 +8,20 @@ const CHANNEL_INDEX: usize = 1;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
+    let args: Vec<usize> = std::env::args()
+        .skip(1)
+        .take(2)
+        .map(|p| p.parse())
+        .collect::<Result<_, _>>()?;
+    let mut args = args.into_iter();
+    let chan_index = args.next().unwrap_or(CHANNEL_INDEX);
+    let pin = args.next().unwrap_or(19);
+
     let (boot_tx, boot_rx) = oneshot::channel();
     let (data_tx, mut data_rx) = mpsc::channel::<PixelBatch>(100);
     thread::spawn(move || {
         let channel = ChannelBuilder::new()
-            .pin(19)
+            .pin(pin as i32)
             .count(10)
             .strip_type(StripType::Ws2811Rgb)
             .brightness(55)
@@ -21,7 +30,7 @@ async fn main() -> Result<(), anyhow::Error> {
         let maybe_controller = ControllerBuilder::new()
             .freq(800_000)
             .dma(10)
-            .channel(CHANNEL_INDEX, channel)
+            .channel(chan_index, channel)
             .build();
         let mut controller = match maybe_controller {
             Ok(c) => c,
@@ -34,7 +43,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
         while let Some(data) = data_rx.blocking_recv() {
             println!("instruction: {:?}", data);
-            let pixels = controller.leds_mut(CHANNEL_INDEX);
+            let pixels = controller.leds_mut(chan_index);
             let mut i = data.offset.unwrap_or(0);
             for (p, (r, g, b)) in data.pixels.iter().cycle().enumerate() {
                 if p > data.pixels.len() && !data.r#loop {
