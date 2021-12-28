@@ -71,7 +71,9 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/batch", post(batch))
         .layer(AddExtensionLayer::new(Arc::new(data_tx)));
 
-    axum::Server::bind(&(Ipv6Addr::UNSPECIFIED, 3000).into())
+    let addr = (Ipv6Addr::UNSPECIFIED, 3000).into();
+    println!("Running on {}", addr);
+    axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await?;
 
